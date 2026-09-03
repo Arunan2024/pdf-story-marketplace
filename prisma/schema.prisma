@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String              @id @default(cuid())
+  name              String
+  email             String              @unique
+  passwordHash      String?
+  gender            String?
+  birthYear         Int?
+  role              Role                @default(USER)
+  accountStatus     AccountStatus       @default(ACTIVE)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  purchases         Purchase[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+model Story {
+  id                String              @id @default(cuid())
+  title             String
+  description       String
+  price             Float
+  currency          String              @default("usd")
+  coverImage        String?
+  pdfStorageKey     String?
+  published         Boolean             @default(false)
+  popular           Boolean             @default(false)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  characters        Character[]
+  purchases         Purchase[]
+}
+
+model Character {
+  id                String              @id @default(cuid())
+  name              String
+  description       String?
+  storyId           String
+  story             Story               @relation(fields: [storyId], references: [id], onDelete: Cascade)
+}
+
+model Purchase {
+  id                    String              @id @default(cuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storyId               String
+  story                 Story               @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  amount                Float
+  currency              String              @default("usd")
+  stripeCheckoutSessionId String?
+  stripePaymentIntentId   String?
+  status                PurchaseStatus      @default(PENDING)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([userId, storyId])
+}
+
+model PasswordResetToken {
+  id                String              @id @default(cuid())
+  userId            String
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash         String
+  expiresAt         DateTime
+  usedAt            DateTime?
+  createdAt         DateTime            @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum PurchaseStatus {
+  PENDING
+  SUCCESSFUL
+  FAILED
+  REFUNDED
+}
