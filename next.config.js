@@ -14,10 +14,6 @@ const nextConfig = {
       },
     ],
   },
-  // Disable Turbopack on Vercel
-  experimental: {
-    turbo: false,
-  },
 }
 
 module.exports = nextConfig
